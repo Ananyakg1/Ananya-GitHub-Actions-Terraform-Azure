@@ -16,4 +16,4 @@ provider "azurerm" {
   tenant_id       = env.AZURE_AD_TENANT_ID
 }
  
-}
+
