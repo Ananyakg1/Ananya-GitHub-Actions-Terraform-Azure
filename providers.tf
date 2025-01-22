@@ -8,10 +8,6 @@ terraform {
 }
 
 provider "azurerm" {
-  features {
-  
-  }
-provider "azurerm" {
   features {}
 
   subscription_id = env.AZURE_SUBSCRIPTION_ID
