@@ -1,6 +1,6 @@
 variable "resource_group_name" {
   description = "The name of the Resource Group"
-  default     = "TerraformDemo"
+  default     = "ananyaresourcegroup"
 }
 
 variable "location" {
