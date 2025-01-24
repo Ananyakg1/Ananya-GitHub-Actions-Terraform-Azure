@@ -128,7 +128,7 @@ jobs:
     # Step 13: Configure Infracost API key
     # You need to set your Infracost API key in your GitHub repository secrets
     - name: Configure Infracost API key
-      run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
+      run: infracost configure set api_key ${{ secrets.AZURE_SECRETS }}
 
     # Step 14: Run Infracost to calculate costs
     - name: Run Infracost
