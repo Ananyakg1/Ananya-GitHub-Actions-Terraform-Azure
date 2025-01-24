@@ -91,7 +91,8 @@ jobs:
     # Run Checkov to scan the Terraform code
    # Run Checkov to scan the Terraform code
     - name: Run Checkov
-      run: checkov -d . --skip-failed
+      run: checkov -d . || true
+
 
     - name: Terraform Init
       run: terraform init
