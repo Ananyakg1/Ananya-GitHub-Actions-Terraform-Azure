@@ -98,6 +98,14 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
+    - name: Set up TFLint
+      uses: terraform-linters/setup-tflint-action@v1
+      with:
+        tflint_version: '0.32.0'  # You can specify a version if needed
+
+    - name: Run TFLint
+      run: tflint --config .tflint.hcl  # Optional: Specify your TFLint configuration file if you have one
+
     - name: Terraform Plan
       run: terraform plan -input=false
 
