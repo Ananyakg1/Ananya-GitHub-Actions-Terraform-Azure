@@ -71,7 +71,7 @@ jobs:
     - name: Log in to Azure
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_SECRETS1 }}
+        creds: ${{ secrets.AZURE_SECRETS }}
  
     # Step 3: Set up Python for Checkov
     - name: Set up Python
@@ -96,15 +96,15 @@ jobs:
     - name: Run Checkov
       run: checkov -d . || true
 
-    # Step 7: Set up TFLint
-    - name: Set up TFLint
-      uses: terraform-linters/setup-tflint-action@v1
-      with:
-        tflint_version: '0.32.0'  # Specify the TFLint version
+    # Step 7: Install TFLint
+    - name: Install TFLint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+        tflint --version  # Verify TFLint is installed
 
     # Step 8: Run TFLint to lint Terraform files
     - name: Run TFLint
-      run: tflint --config .tflint.hcl || true  # If no config file exists, it will run with default rules
+      run: tflint || true  # If you want the pipeline to fail on issues, remove "|| true"
 
     # Step 9: Terraform Init
     - name: Terraform Init
