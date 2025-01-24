@@ -89,9 +89,10 @@ jobs:
         checkov --version  # Verify Checkov is installed
 
     # Run Checkov to scan the Terraform code
+   # Run Checkov to scan the Terraform code
     - name: Run Checkov (Terraform Code Scan)
       run: |
-        checkov -d . || (echo "Checkov failed to scan" && exit 1)  # Fail gracefully and print error if Checkov fails
+        checkov -d . --verbose || (echo "Checkov failed to scan" && exit 1)  # Fail gracefully and print error if Checkov fails
 
     - name: Terraform Init
       run: terraform init
