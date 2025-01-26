@@ -12,5 +12,9 @@ alias = "other"
   features {
     
   }
+  subscription_id = "AZURE_SUBSCRIPTION_ID"
+  tenant_id       = "AZURE_AD_TENANT_ID"
+  client_id       = "AZURE_AD_CLIENT_ID"
+  client_secret   = "AZURE_AD_CLIENT_SECRET"
  
 }
