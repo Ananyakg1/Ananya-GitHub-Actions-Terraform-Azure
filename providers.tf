@@ -8,6 +8,7 @@ terraform {
 }
 
 provider "azurerm" {
+alias = "other"
   features {
     
   }
