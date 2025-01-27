@@ -126,7 +126,7 @@ jobs:
         infracost --version  # Verify Infracost is installed
 
     # Step 13: Configure Infracost API key
-    # You need to set your Infracost API key in your GitHub repository secrets
+    # Make sure your Infracost API key is set in GitHub secrets
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
@@ -143,7 +143,7 @@ jobs:
       run: |
         infracost comment github --path=infracost-report.json \
         --repo=$GITHUB_REPOSITORY \
-        --pull-request=$GITHUB_REF_NAME \
+        --pull-request=${{ github.event.pull_request.number }} \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
     # Step 16: Terraform Apply
