@@ -105,13 +105,12 @@ jobs:
 
     # Step 8: Install TFLint
     # Step 7: Install TFLint (using .tar.gz)
+    # Step 7: Install TFLint
+    # Step 7: Install TFLint
     - name: Install TFLint
       run: |
-        curl -sSL https://github.com/terraform-linters/tflint/releases/latest/download/tflint-linux-amd64.tar.gz -o tflint.tar.gz
-        tar -xzf tflint.tar.gz
-        sudo mv tflint /usr/local/bin/
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
         tflint --version  # Verify TFLint is installed
-
 
     # Step 9: Run TFLint to lint Terraform files
     - name: Run TFLint
