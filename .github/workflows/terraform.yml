@@ -104,12 +104,13 @@ jobs:
       run: checkov -d . || true
 
     # Step 8: Install TFLint
+    # Step 7: Install TFLint (using .tar.gz)
     - name: Install TFLint
       run: |
-       curl -sSL https://github.com/terraform-linters/tflint/releases/latest/download/tflint-linux-amd64.zip -o tflint.zip
-       unzip tflint.zip
-       sudo mv tflint /usr/local/bin/
-       tflint --version
+        curl -sSL https://github.com/terraform-linters/tflint/releases/latest/download/tflint-linux-amd64.tar.gz -o tflint.tar.gz
+        tar -xzf tflint.tar.gz
+        sudo mv tflint /usr/local/bin/
+        tflint --version  # Verify TFLint is installed
 
 
     # Step 9: Run TFLint to lint Terraform files
