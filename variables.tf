@@ -1,6 +1,6 @@
 variable "resource_group_name" {
   description = "The name of the Resource Group"
-  default     = "ananyaresourcegroupnew1"
+  default     = "ananyaresourcegroupnew2"
 }
 
 variable "location" {
@@ -10,7 +10,7 @@ variable "location" {
 
 variable "storage_account_name" {
   description = "The name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "ananya1demostoragenew1"
+  default     = "ananya1demostoragenew2"
 
   validation {
     condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
@@ -20,7 +20,7 @@ variable "storage_account_name" {
 
 variable "container_name" {
   description = "The name of the Blob Container"
-  default     = "ananya1tfstatefilenew1"
+  default     = "ananya1tfstatefilenew2"
 }
 
 variable "tfstate_key" {
