@@ -170,6 +170,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev  # No approval required for dev
     steps:
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
       - name: Terraform Apply for dev
         run: terraform apply -auto-approve -input=false
 
@@ -179,6 +184,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: qa  # Approval required in GitHub settings
     steps:
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
       - name: Terraform Apply for QA
         run: terraform apply -auto-approve -input=false
 
@@ -188,5 +198,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: production  # Approval required in GitHub settings
     steps:
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
       - name: Terraform Apply for Prod
         run: terraform apply -auto-approve -input=false
