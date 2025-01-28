@@ -46,7 +46,7 @@ name: 'Terraform'
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev", "qa", "production" ]
   pull_request:
 
 permissions:
@@ -56,7 +56,6 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: dev  # Default environment for the initial deployment.
 
     defaults:
       run:
@@ -159,25 +158,30 @@ jobs:
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-    # Step 18: Terraform Apply for dev (No approval needed)
-    - name: Terraform Apply - dev
-      if: github.ref == 'refs/heads/dev'
-      environment:
-        name: dev
-      run: terraform apply -auto-approve -input=false
+  # Environment specific Terraform applies
+  apply_dev:
+    name: Apply for dev environment
+    needs: terraform
+    runs-on: ubuntu-latest
+    environment: dev  # No approval required for dev
+    steps:
+      - name: Terraform Apply for dev
+        run: terraform apply -auto-approve -input=false
 
-    # Step 19: Terraform Apply for QA (Approval Required)
-    - name: Terraform Apply - qa
-      if: github.ref == 'refs/heads/qa'
-      environment: qa
-      run: |
-        echo "QA environment requires approval!"
-        terraform apply -auto-approve -input=false
+  apply_qa:
+    name: Apply for QA environment
+    needs: terraform
+    runs-on: ubuntu-latest
+    environment: qa  # Approval required in GitHub settings
+    steps:
+      - name: Terraform Apply for QA
+        run: terraform apply -auto-approve -input=false
 
-    # Step 20: Terraform Apply for production (Approval Required)
-    - name: Terraform Apply - prod
-      if: github.ref == 'refs/heads/production'
-      environment: production
-      run: |
-        echo "Production environment requires approval!"
-        terraform apply -auto-approve -input=false
+  apply_prod:
+    name: Apply for Production environment
+    needs: terraform
+    runs-on: ubuntu-latest
+    environment: production  # Approval required in GitHub settings
+    steps:
+      - name: Terraform Apply for Prod
+        run: terraform apply -auto-approve -input=false
