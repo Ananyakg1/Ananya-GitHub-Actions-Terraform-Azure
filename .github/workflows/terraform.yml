@@ -206,12 +206,12 @@ jobs:
       run: terraform apply -auto-approve -input=false
 
 
- apply_qa:
-  name: Apply for QA environment
-  needs: terraform
-  runs-on: ubuntu-latest
-  environment: qa  # Approval required in GitHub settings
-  steps:
+  apply_qa:
+   name: Apply for QA environment
+   needs: terraform
+   runs-on: ubuntu-latest
+   environment: qa  # Approval required in GitHub settings
+   steps:
     # Step 1: Checkout the repository
     - name: Checkout the repository
       uses: actions/checkout@v4
@@ -235,12 +235,33 @@ jobs:
     # Step 5: Terraform Apply
     - name: Terraform Apply for QA
       run: terraform apply -auto-approve -input=false
-
   apply_prod:
-    name: Apply for Production environment
-    needs: terraform
-    runs-on: ubuntu-latest
-    environment: production  # Approval required in GitHub settings
-    steps:
-      - name: Terraform Apply for Prod
-        run: terraform apply -auto-approve -input=false
+   name: Apply for Production environment
+   needs: terraform
+   runs-on: ubuntu-latest
+   environment: production  # Approval required in GitHub settings
+   steps:
+    # Step 1: Checkout the repository
+    - name: Checkout the repository
+      uses: actions/checkout@v4
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_SECRETS }}
+
+    # Step 3: Install Terraform
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: "1.4.0"  # Specify the required Terraform version
+
+    # Step 4: Terraform Init
+    - name: Terraform Init for Production
+      run: terraform init
+
+    # Step 5: Terraform Apply
+    - name: Terraform Apply for Production
+      run: terraform apply -auto-approve -input=false
+
