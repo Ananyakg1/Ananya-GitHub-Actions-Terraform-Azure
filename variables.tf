@@ -1,6 +1,16 @@
+
+variable "environment" {
+  description = "The deployment environment (deploy, qa, prod)"
+  default     = "deploy"
+  validation {
+    condition     = var.environment == "deploy" || var.environment == "qa" || var.environment == "prod"
+    error_message = "Environment must be one of 'deploy', 'qa', or 'prod'."
+  }
+}
+
 variable "resource_group_name" {
   description = "The name of the Resource Group"
-  default     = "resourcegroupnew2"
+  default     = "resourcegroup-${var.environment}" # Dynamically adds environment suffix
 }
 
 variable "location" {
@@ -10,7 +20,7 @@ variable "location" {
 
 variable "storage_account_name" {
   description = "The name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "demostoragenew2"
+  default     = "demostorage${var.environment}" # Dynamically adds environment suffix
 
   validation {
     condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
@@ -20,10 +30,11 @@ variable "storage_account_name" {
 
 variable "container_name" {
   description = "The name of the Blob Container"
-  default     = "tfstatefilenew2"
+  default     = "tfstatefile-${var.environment}" # Dynamically adds environment suffix
 }
 
 variable "tfstate_key" {
   description = "The name of the Terraform state file"
-  default     = "dev.terraform.tfstate"
+  default     = "${var.environment}.terraform.tfstate" # State file based on environment
 }
+
