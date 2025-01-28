@@ -181,8 +181,30 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev  # No approval required for dev
     steps:
-      - name: Terraform Apply for dev
-        run: terraform apply -auto-approve -input=false
+    # Step 1: Checkout the repository
+    - name: Checkout the repository
+      uses: actions/checkout@v4
+
+    # Step 2: Log in to Azure
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_SECRETS }}
+
+    # Step 3: Install Terraform
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: "1.4.0"  # Specify the required Terraform version
+
+    # Step 4: Terraform Init
+    - name: Terraform Init for dev
+      run: terraform init
+
+    # Step 5: Terraform Apply
+    - name: Terraform Apply for dev
+      run: terraform apply -auto-approve -input=false
+
 
   apply_qa:
     name: Apply for QA environment
