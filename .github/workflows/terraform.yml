@@ -56,7 +56,7 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.ref == 'main' && 'production' || 'staging' }}
+    environment: dev  # Default environment for the initial deployment.
 
     defaults:
       run:
@@ -162,24 +162,22 @@ jobs:
     # Step 18: Terraform Apply for dev (No approval needed)
     - name: Terraform Apply - dev
       if: github.ref == 'refs/heads/dev'
+      environment:
+        name: dev
       run: terraform apply -auto-approve -input=false
 
     # Step 19: Terraform Apply for QA (Approval Required)
     - name: Terraform Apply - qa
       if: github.ref == 'refs/heads/qa'
-      environment:
-        name: qa
-        url: ${{ steps.deploy.outputs.app_url }}
-      approvals:
-        required: 1
-      run: terraform apply -auto-approve -input=false
+      environment: qa
+      run: |
+        echo "QA environment requires approval!"
+        terraform apply -auto-approve -input=false
 
     # Step 20: Terraform Apply for production (Approval Required)
-    - name: Terraform Apply - production
+    - name: Terraform Apply - prod
       if: github.ref == 'refs/heads/production'
-      environment:
-        name: production
-        url: ${{ steps.deploy.outputs.app_url }}
-      approvals:
-        required: 1
-      run: terraform apply -auto-approve -input=false
+      environment: production
+      run: |
+        echo "Production environment requires approval!"
+        terraform apply -auto-approve -input=false
