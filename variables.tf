@@ -1,6 +1,6 @@
 variable "resource_group_name" {
   description = "The base name of the Resource Group"
-  default     = "resourcegroupnew2" # Base name for resource group
+  default     = "resourcegroupnew3" # Base name for resource group
 }
 
 variable "location" {
@@ -10,7 +10,7 @@ variable "location" {
 
 variable "storage_account_name" {
   description = "The base name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "demostoragenew2" # Base name for storage account
+  default     = "demostoragenew3" # Base name for storage account
 
   validation {
     condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
@@ -20,7 +20,7 @@ variable "storage_account_name" {
 
 variable "container_name" {
   description = "The base name of the Blob Container"
-  default     = "tfstatefilenew2" # Base name for blob container
+  default     = "tfstatefilenew3" # Base name for blob container
 }
 
 variable "tfstate_key" {
