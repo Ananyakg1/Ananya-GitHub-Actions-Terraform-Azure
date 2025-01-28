@@ -1,16 +1,6 @@
-
-variable "environment" {
-  description = "The deployment environment (deploy, qa, prod)"
-  default     = "deploy"
-  validation {
-    condition     = var.environment == "deploy" || var.environment == "qa" || var.environment == "prod"
-    error_message = "Environment must be one of 'deploy', 'qa', or 'prod'."
-  }
-}
-
 variable "resource_group_name" {
-  description = "The name of the Resource Group"
-  default     = "resourcegroup-${var.environment}" # Dynamically adds environment suffix
+  description = "The base name of the Resource Group"
+  default     = "resourcegroupnew2" # Base name for resource group
 }
 
 variable "location" {
@@ -19,8 +9,8 @@ variable "location" {
 }
 
 variable "storage_account_name" {
-  description = "The name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "demostorage${var.environment}" # Dynamically adds environment suffix
+  description = "The base name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
+  default     = "demostoragenew2" # Base name for storage account
 
   validation {
     condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
@@ -29,12 +19,16 @@ variable "storage_account_name" {
 }
 
 variable "container_name" {
-  description = "The name of the Blob Container"
-  default     = "tfstatefile-${var.environment}" # Dynamically adds environment suffix
+  description = "The base name of the Blob Container"
+  default     = "tfstatefilenew2" # Base name for blob container
 }
 
 variable "tfstate_key" {
-  description = "The name of the Terraform state file"
-  default     = "${var.environment}.terraform.tfstate" # State file based on environment
+  description = "The base name of the Terraform state file"
+  default     = "dev.terraform.tfstate" # Base name for Terraform state file
 }
 
+variable "environment" {
+  description = "The environment (e.g., deploy, qa, prod)"
+  default     = "dev" # Default environment
+}
