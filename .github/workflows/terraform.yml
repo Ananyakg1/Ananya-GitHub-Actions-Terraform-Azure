@@ -55,7 +55,7 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: dev  # This matches the environment configured in GitHub
+    environment: dev  # Update this for other environments like dev, qa, prod
 
     defaults:
       run:
@@ -75,102 +75,41 @@ jobs:
     - name: Set environment variable
       run: echo "ENV=${{ vars.ENV }}" >> $GITHUB_ENV
 
-    # Step 4: Debug - Print Current Directory and List Files
-    - name: Debug - Print current directory and list files
-      run: |
-        echo "Current working directory:"
-        pwd
-        echo "Listing files in the current directory:"
-        ls -l
-
-    # Step 5: Debug Azure Secrets
-    - name: Debug Azure Secrets
-      run: |
-        echo "Tenant ID: $AZURE_TENANT_ID"
-        echo "Client ID: $AZURE_CLIENT_ID"
-        echo "Subscription ID: $AZURE_SUBSCRIPTION_ID"
-
-    # Step 6: Set up Python for Checkov
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.11'
-
-    # Step 7: Set up Terraform
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.0.0
-
-    # Step 8: Verify Terraform installation
-    - name: Verify Terraform installation
-      run: terraform --version
-
-    # Step 9: Install Checkov
-    - name: Install Checkov
-      run: |
-        python -m pip install --upgrade pip
-        pip install checkov
-        checkov --version  # Verify Checkov is installed
-
-    # Step 10: Create .checkov.yml file to skip specific checks globally
-    - name: Create .checkov.yml file
-      run: |
-        echo 'skip-checks:' > .checkov.yml
-        echo '  - CKV_AZURE_1  # Skipping HTTPS enforcement on Azure Storage Accounts' >> .checkov.yml
-        echo '  - CKV_AZURE_2  # Skipping Azure resource tagging enforcement' >> .checkov.yml
-        echo '  - CKV_AZURE_3  # Skipping unnecessary public exposure of Azure resources' >> .checkov.yml
-
-    # Step 11: Run Checkov to scan the Terraform code (skipping failed checks)
-    - name: Run Checkov
-      run: checkov -d . --config-file .checkov.yml || true  # Skips failed checks based on .checkov.yml
-
-    # Step 12: Install TFLint
-    - name: Install TFLint
-      run: |
-        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-        tflint --version  # Verify TFLint is installed
-
-    # Step 13: Run TFLint to lint Terraform files
-    - name: Run TFLint
-      run: tflint || true  # If you want the pipeline to fail on issues, remove "|| true"
-
-    # Step 14: Terraform Init
+    # Step 4: Terraform Init
     - name: Terraform Init
       run: terraform init
 
-    # Step 15: Import Existing Resource Group (if not already imported)
-    - name: Import existing resource group
+    # Step 5: Import existing resource group (only if it exists in your Azure subscription)
+    - name: Import existing resource group for dev
       run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/resourcegroup1-dev"
-      continue-on-error: true  # Continue even if the resource is already imported
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/newresourcegroup1-dev"
+      continue-on-error: true  # Skip if the resource group is already imported
 
-    # Step 16: Terraform Plan
+    # Step 6: Terraform Plan
     - name: Terraform Plan
       run: terraform plan -out=tfplan.binary
 
-    # Step 17: Terraform Show
-    # Convert the Terraform binary plan to JSON for Infracost
+    # Step 7: Terraform Show (converting binary plan to JSON for use by Infracost)
     - name: Terraform Show
       run: terraform show -json tfplan.binary > plan.json
 
-    # Step 18: Install Infracost
+    # Step 8: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
         infracost --version  # Verify Infracost is installed
 
-    # Step 19: Configure Infracost API key
+    # Step 9: Configure Infracost API key
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 20: Run Infracost to calculate costs
+    # Step 10: Run Infracost to calculate costs
     - name: Run Infracost
       run: |
         infracost breakdown --path=plan.json \
         --format=json --out-file=infracost-report.json
 
-    # Step 21: Post Infracost comment to PR (if applicable)
+    # Step 11: Post Infracost comment to PR (if applicable)
     - name: Post Infracost Comment
       if: ${{ github.event_name == 'pull_request' }}
       run: |
@@ -237,9 +176,16 @@ jobs:
     - name: Terraform Init for QA
       run: terraform init
 
-    # Step 5: Terraform Apply
+    # Step 5: Import existing resource group for qa
+    - name: Import existing resource group for qa
+      run: |
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/newresourcegroup1-qa"
+      continue-on-error: true  # Skip if resource already imported
+
+    # Step 6: Terraform Apply
     - name: Terraform Apply for QA
       run: terraform apply -auto-approve -input=false
+  
   apply_prod:
    name: Apply for Production environment
    needs: terraform
