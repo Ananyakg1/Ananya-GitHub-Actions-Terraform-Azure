@@ -85,11 +85,11 @@ jobs:
     - name: Verify Terraform installation
       run: terraform --version
 
-    # Step 6: Import existing resource group for dev
-    - name: Import existing resource group for dev
+    # Step 6: Import the resource group into Terraform state (for dev environment)
+    - name: Import resource group (for dev)
       run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/newresourcegroup1-dev"
-      continue-on-error: true  # Skip if the resource group is already imported
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-dev" || true
+      continue-on-error: true  # Skip this step if the resource is already imported
 
     # Step 7: Terraform Init
     - name: Terraform Init
@@ -152,11 +152,17 @@ jobs:
       with:
         terraform_version: "1.4.0"  # Specify the required Terraform version
 
-    # Step 4: Terraform Init
+    # Step 4: Import resource group for dev (this step ensures it's only done for dev environment)
+    - name: Import resource group (for dev)
+      run: |
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-dev" || true
+      continue-on-error: true  # Skip if the resource is already imported
+
+    # Step 5: Terraform Init
     - name: Terraform Init for dev
       run: terraform init
 
-    # Step 5: Terraform Apply
+    # Step 6: Terraform Apply
     - name: Terraform Apply for dev
       run: terraform apply -auto-approve -input=false
 
@@ -182,11 +188,17 @@ jobs:
       with:
         terraform_version: "1.4.0"  # Specify the required Terraform version
 
-    # Step 4: Terraform Init
+    # Step 4: Import resource group for QA (this step ensures it's only done for QA environment)
+    - name: Import resource group (for QA)
+      run: |
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-qa" || true
+      continue-on-error: true  # Skip if the resource is already imported
+
+    # Step 5: Terraform Init
     - name: Terraform Init for QA
       run: terraform init
 
-    # Step 5: Terraform Apply
+    # Step 6: Terraform Apply
     - name: Terraform Apply for QA
       run: terraform apply -auto-approve -input=false
 
@@ -212,11 +224,17 @@ jobs:
       with:
         terraform_version: "1.4.0"  # Specify the required Terraform version
 
-    # Step 4: Terraform Init
+    # Step 4: Import resource group for Production (this step ensures it's only done for prod environment)
+    - name: Import resource group (for prod)
+      run: |
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-prod" || true
+      continue-on-error: true  # Skip if the resource is already imported
+
+    # Step 5: Terraform Init
     - name: Terraform Init for Production
       run: terraform init
 
-    # Step 5: Terraform Apply
+    # Step 6: Terraform Apply
     - name: Terraform Apply for Production
       run: terraform apply -auto-approve -input=false
 
