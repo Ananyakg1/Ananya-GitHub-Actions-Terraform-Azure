@@ -1,10 +1,10 @@
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_names[var.environment]
+  name     = lookup({ "dev" = var.resource_group_name_dev, "qa" = var.resource_group_name_qa, "prod" = var.resource_group_name_prod }, var.environment)
   location = var.location
 }
 
 resource "azurerm_storage_account" "storage" {
-  name                     = var.storage_account_names[var.environment]
+  name                     = lookup({ "dev" = var.storage_account_name_dev, "qa" = var.storage_account_name_qa, "prod" = var.storage_account_name_prod }, var.environment)
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = var.location
   account_tier             = "Standard"
@@ -12,7 +12,7 @@ resource "azurerm_storage_account" "storage" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                  = var.container_names[var.environment]
+  name                  = lookup({ "dev" = var.container_name_dev, "qa" = var.container_name_qa, "prod" = var.container_name_prod }, var.environment)
   storage_account_name  = azurerm_storage_account.storage.name
   container_access_type = "private"
 }
