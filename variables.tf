@@ -9,39 +9,39 @@ variable "location" {
 }
 
 variable "resource_group_name_dev" {
-  default = "4mainresourcegroup1-dev"
+  default = "main1resourcegroup1-dev"
 }
 
 variable "resource_group_name_qa" {
-  default = "5main1resourcegroup1-qa"
+  default = "main2resourcegroup1-qa"
 }
 
 variable "resource_group_name_prod" {
-  default = "6main2resourcegroup1-prod"
+  default = "main3resourcegroup1-prod"
 }
 
 variable "storage_account_name_dev" {
-  default = "4mainstoragedevnew123"
+  default = "main1storagedevnew123"
 }
 
 variable "storage_account_name_qa" {
-  default = "5main1storageqanew123"
+  default = "main2storageqanew123"
 }
 
 variable "storage_account_name_prod" {
-  default = "6main2storageprodnew123"
+  default = "main3storageprodnew123"
 }
 
 variable "container_name_dev" {
-  default = "4maintfstatefile-dev"
+  default = "main1tfstatefile-dev"
 }
 
 variable "container_name_qa" {
-  default = "5main1tfstatefile-qa"
+  default = "main2tfstatefile-qa"
 }
 
 variable "container_name_prod" {
-  default = "6main2tfstatefile-prod"
+  default = "main3tfstatefile-prod"
 }
 
 
