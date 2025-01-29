@@ -1,6 +1,6 @@
-variable "resource_group_name" {
-  description = "The base name of the Resource Group"
-  default     = "resourcegroupnew3" # Base name for resource group
+variable "environment" {
+  description = "The environment (e.g., dev, qa, prod)"
+  default     = "dev"
 }
 
 variable "location" {
@@ -8,28 +8,57 @@ variable "location" {
   default     = "East US"
 }
 
-variable "storage_account_name" {
-  description = "The base name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "demostoragenew3" # Base name for storage account
-
-  validation {
-    condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
-    error_message = "Storage account name must be 3-24 characters long, lowercase, and contain only letters and numbers."
-  }
+# Unique Resource Group Names
+variable "resource_group_name_dev" {
+  description = "Resource Group name for dev environment"
+  default     = "resourcegroup-dev"
 }
 
-variable "container_name" {
-  description = "The base name of the Blob Container"
-  default     = "tfstatefilenew3" # Base name for blob container
+variable "resource_group_name_qa" {
+  description = "Resource Group name for qa environment"
+  default     = "resourcegroup-qa"
+}
+
+variable "resource_group_name_prod" {
+  description = "Resource Group name for prod environment"
+  default     = "resourcegroup-prod"
+}
+
+# Unique Storage Account Names (Must be globally unique)
+variable "storage_account_name_dev" {
+  description = "Storage Account name for dev environment"
+  default     = "storagedevnew123"
+}
+
+variable "storage_account_name_qa" {
+  description = "Storage Account name for qa environment"
+  default     = "storageqanew123"
+}
+
+variable "storage_account_name_prod" {
+  description = "Storage Account name for prod environment"
+  default     = "storageprodnew123"
+}
+
+# Unique Container Names
+variable "container_name_dev" {
+  description = "Blob Container name for dev environment"
+  default     = "tfstatefile-dev"
+}
+
+variable "container_name_qa" {
+  description = "Blob Container name for qa environment"
+  default     = "tfstatefile-qa"
+}
+
+variable "container_name_prod" {
+  description = "Blob Container name for prod environment"
+  default     = "tfstatefile-prod"
 }
 
 variable "tfstate_key" {
   description = "The base name of the Terraform state file"
-  default     = "dev.terraform.tfstate" # Base name for Terraform state file
+  default     = "terraform.tfstate"
 }
 
-variable "environment" {
-  description = "The environment (e.g., deploy, qa, prod)"
-  default     = "dev" # Default environment
-}
 
