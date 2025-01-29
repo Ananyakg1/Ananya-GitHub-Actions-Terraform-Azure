@@ -1,6 +1,16 @@
-variable "environment" {
-  description = "The environment (e.g., dev, qa, prod)"
-  default     = "dev"
+variable "resource_group_name_dev" {
+  description = "The name of the Resource Group for Dev"
+  default     = "resourcegroup-dev-unique"  # New name for Dev resource group
+}
+
+variable "resource_group_name_qa" {
+  description = "The name of the Resource Group for QA"
+  default     = "resourcegroup-qa-unique"   # New name for QA resource group
+}
+
+variable "resource_group_name_prod" {
+  description = "The name of the Resource Group for Prod"
+  default     = "resourcegroup-prod-unique" # New name for Prod resource group
 }
 
 variable "location" {
@@ -8,57 +18,35 @@ variable "location" {
   default     = "East US"
 }
 
-# Unique Resource Group Names
-variable "resource_group_name_dev" {
-  description = "Resource Group name for dev environment"
-  default     = "resourcegroup1-dev"
-}
-
-variable "resource_group_name_qa" {
-  description = "Resource Group name for qa environment"
-  default     = "resourcegroup1-qa"
-}
-
-variable "resource_group_name_prod" {
-  description = "Resource Group name for prod environment"
-  default     = "resourcegroup1-prod"
-}
-
-# Unique Storage Account Names (Must be globally unique)
 variable "storage_account_name_dev" {
-  description = "Storage Account name for dev environment"
-  default     = "1storagedevnew123"
+  description = "The name of the Storage Account for Dev"
+  default     = "storagedevunique"  # New name for Dev storage account
 }
 
 variable "storage_account_name_qa" {
-  description = "Storage Account name for qa environment"
-  default     = "1storageqanew123"
+  description = "The name of the Storage Account for QA"
+  default     = "storageqaunique"   # New name for QA storage account
 }
 
 variable "storage_account_name_prod" {
-  description = "Storage Account name for prod environment"
-  default     = "1storageprodnew123"
+  description = "The name of the Storage Account for Prod"
+  default     = "storageprodunique" # New name for Prod storage account
 }
 
-# Unique Container Names
 variable "container_name_dev" {
-  description = "Blob Container name for dev environment"
-  default     = "tfstatefile1-dev"
+  description = "The name of the Blob Container for Dev"
+  default     = "containerdevunique"  # New name for Dev container
 }
 
 variable "container_name_qa" {
-  description = "Blob Container name for qa environment"
-  default     = "tfstatefile1-qa"
+  description = "The name of the Blob Container for QA"
+  default     = "containerqaunique"   # New name for QA container
 }
 
 variable "container_name_prod" {
-  description = "Blob Container name for prod environment"
-  default     = "tfstatefile1-prod"
+  description = "The name of the Blob Container for Prod"
+  default     = "containerprodunique" # New name for Prod container
 }
 
-variable "tfstate_key" {
-  description = "The base name of the Terraform state file"
-  default     = "terraform.tfstate"
-}
 
 
