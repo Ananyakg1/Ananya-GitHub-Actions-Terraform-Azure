@@ -34,7 +34,7 @@ variable "container_names" {
   default = {
     dev  = "tfstatefile-dev"
     qa   = "tfstatefile-qa"
-    prod = "tfstatefile-prod"
+    prod = "tfstatefile-prod"  
   }
 }
 
