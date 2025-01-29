@@ -41,7 +41,6 @@
 #       uses: hashicorp/setup-terraform@v1
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
 name: 'Terraform'
 
 on:
@@ -140,32 +139,38 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
-    # Step 15: Terraform Plan
+    # Step 15: Import Existing Resource Group (if not already imported)
+    - name: Import existing resource group
+      run: |
+        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/resourcegroup1-dev"
+      continue-on-error: true  # Continue even if the resource is already imported
+
+    # Step 16: Terraform Plan
     - name: Terraform Plan
       run: terraform plan -out=tfplan.binary
 
-    # Step 16: Terraform Show
+    # Step 17: Terraform Show
     # Convert the Terraform binary plan to JSON for Infracost
     - name: Terraform Show
       run: terraform show -json tfplan.binary > plan.json
 
-    # Step 17: Install Infracost
+    # Step 18: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
         infracost --version  # Verify Infracost is installed
 
-    # Step 18: Configure Infracost API key
+    # Step 19: Configure Infracost API key
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 19: Run Infracost to calculate costs
+    # Step 20: Run Infracost to calculate costs
     - name: Run Infracost
       run: |
         infracost breakdown --path=plan.json \
         --format=json --out-file=infracost-report.json
 
-    # Step 20: Post Infracost comment to PR (if applicable)
+    # Step 21: Post Infracost comment to PR (if applicable)
     - name: Post Infracost Comment
       if: ${{ github.event_name == 'pull_request' }}
       run: |
@@ -264,4 +269,5 @@ jobs:
     # Step 5: Terraform Apply
     - name: Terraform Apply for Production
       run: terraform apply -auto-approve -input=false
+
 
