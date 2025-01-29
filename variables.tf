@@ -1,6 +1,6 @@
 variable "resource_group_name" {
   description = "The base name of the Resource Group"
-  default     = "resourcegroupnew4"
+  default     = "resourcegroupnew3" # Base name for resource group
 }
 
 variable "location" {
@@ -10,7 +10,7 @@ variable "location" {
 
 variable "storage_account_name" {
   description = "The base name of the Storage Account (must be 3-24 characters, lowercase, letters, and numbers only)"
-  default     = "demostoragenew4"
+  default     = "demostoragenew3" # Base name for storage account
 
   validation {
     condition     = length(var.storage_account_name) >= 3 && length(var.storage_account_name) <= 24 && var.storage_account_name == lower(var.storage_account_name)
@@ -20,33 +20,16 @@ variable "storage_account_name" {
 
 variable "container_name" {
   description = "The base name of the Blob Container"
-  default     = "tfstatefilenew4"
+  default     = "tfstatefilenew3" # Base name for blob container
 }
 
 variable "tfstate_key" {
-  description = "The Terraform state file name"
-  default     = "terraform.tfstate"
+  description = "The base name of the Terraform state file"
+  default     = "dev.terraform.tfstate" # Base name for Terraform state file
 }
 
 variable "environment" {
-  description = "The deployment environment (dev, qa, prod)"
-  type        = string
-  default     = "dev"
-}
-
-variable "allowed_environments" {
-  description = "List of allowed environments"
-  type        = list(string)
-  default     = ["dev", "qa", "prod"]
-}
-
-# Ensure only valid environments are used
-variable "validated_environment" {
-  description = "Validated environment selection"
-  default     = "dev"
-  validation {
-    condition     = contains(var.allowed_environments, var.environment)
-    error_message = "Invalid environment. Allowed values are dev, qa, prod."
-  }
+  description = "The environment (e.g., deploy, qa, prod)"
+  default     = "dev" # Default environment
 }
 
