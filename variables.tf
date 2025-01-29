@@ -1,3 +1,7 @@
+variable "env" {
+  description = "The environment name"
+  type        = string
+}
 variable "environment" {
   description = "The environment (dev, qa, prod)"
   default     = "dev"
