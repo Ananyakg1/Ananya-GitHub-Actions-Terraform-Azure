@@ -164,7 +164,7 @@ jobs:
 
     # Step 6: Terraform Apply
     - name: Terraform Apply for dev
-      run: terraform apply -auto-approve -input=false
+      run: terraform apply -var "location=East US" -var "env=dev" -auto-approve -input=false
 
   apply_qa:
     name: Apply for QA environment
@@ -200,7 +200,7 @@ jobs:
 
     # Step 6: Terraform Apply
     - name: Terraform Apply for QA
-      run: terraform apply -auto-approve -input=false
+      run: terraform apply -var "location=East US" -var "env=qa" -auto-approve -input=false
 
   apply_prod:
     name: Apply for Production environment
@@ -236,5 +236,5 @@ jobs:
 
     # Step 6: Terraform Apply
     - name: Terraform Apply for Production
-      run: terraform apply -auto-approve -input=false
+      run: terraform apply -var "location=East US" -var "env=prod" -auto-approve -input=false
 
