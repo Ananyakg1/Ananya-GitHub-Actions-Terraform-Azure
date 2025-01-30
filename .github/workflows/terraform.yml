@@ -41,11 +41,11 @@
 #       uses: hashicorp/setup-terraform@v1
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-name: 'Terraform CI/CD'
+name: 'Terraform'
 
 on:
   push:
-    branches: [ "qa", "main" ]
+    branches: [ "main" ]
   pull_request:
 
 permissions:
@@ -53,12 +53,9 @@ permissions:
 
 jobs:
   terraform:
-    name: 'Terraform - ${{ matrix.env }}'
+    name: 'Terraform'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        env: [qa, production]  # Running for both environments
-    environment: ${{ matrix.env }}
+    environment: production
 
     defaults:
       run:
@@ -75,62 +72,78 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_SECRETS }}
 
-    # Step 3: Set up Terraform
+    # Step 3: Debug Azure Secrets (optional for troubleshooting)
+    - name: Debug Azure Secrets
+      run: |
+        echo "Tenant ID: $AZURE_TENANT_ID"
+        echo "Client ID: $AZURE_CLIENT_ID"
+        echo "Subscription ID: $AZURE_SUBSCRIPTION_ID"
+
+    # Step 4: Set up Python for Checkov
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    # Step 5: Set up Terraform
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 1.4.0
+        terraform_version: 1.0.0
 
-    # Step 4: Install Checkov
+    # Step 6: Install Checkov
     - name: Install Checkov
       run: |
         python -m pip install --upgrade pip
         pip install checkov
-        checkov --version
+        checkov --version  # Verify Checkov is installed
 
-    # Step 5: Run Checkov for security scanning
+    # Step 7: Run Checkov to scan the Terraform code
     - name: Run Checkov
       run: checkov -d . || true
 
-    # Step 6: Install TFLint
+    # Step 8: Install TFLint
     - name: Install TFLint
       run: |
         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-        tflint --version
+        tflint --version  # Verify TFLint is installed
 
-    # Step 7: Run TFLint for linting Terraform files
+    # Step 9: Run TFLint to lint Terraform files
     - name: Run TFLint
-      run: tflint || true
+      run: tflint || true  # If you want the pipeline to fail on issues, remove "|| true"
 
-    # Step 8: Terraform Init
+    # Step 10: Terraform Init
     - name: Terraform Init
       run: terraform init
 
-    # Step 9: Terraform Plan
+    # Step 11: Terraform Plan
     - name: Terraform Plan
-      run: terraform plan -var="environment=${{ matrix.env }}" -out=tfplan.binary
+      run: terraform plan -out=tfplan.binary
 
-    # Step 10: Terraform Show (Convert plan to JSON for Infracost)
+    # Step 12: Terraform Show
+    # Convert the Terraform binary plan to JSON for Infracost
     - name: Terraform Show
       run: terraform show -json tfplan.binary > plan.json
 
-    # Step 11: Install Infracost
+    # Step 13: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-        infracost --version  
+        infracost --version  # Verify Infracost is installed
 
-    # Step 12: Configure Infracost API key
+    # Step 14: Configure Infracost API key
+    # You need to set your Infracost API key in your GitHub repository secrets
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 13: Run Infracost to calculate costs
+    # Step 15: Run Infracost to calculate costs
     - name: Run Infracost
       run: |
         infracost breakdown --path=plan.json \
         --format=json --out-file=infracost-report.json
 
-    # Step 14: Post Infracost comment to PR (only for pull requests)
+    # Step 16: Post Infracost comment to PR (if applicable)
+    # This step will only run for pull requests
     - name: Post Infracost Comment
       if: ${{ github.event_name == 'pull_request' }}
       run: |
@@ -139,7 +152,6 @@ jobs:
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-    # Step 15: Terraform Apply (Only for Production branch)
+    # Step 17: Terraform Apply
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve -input=false
