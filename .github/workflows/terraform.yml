@@ -45,7 +45,7 @@ name: 'Terraform'
 
 on:
   push:
-    branches: [ "main", "dev", "qa", "production" ]
+    branches: [ "main", "qa", "production" ]
   pull_request:
 
 permissions:
@@ -55,7 +55,6 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
-    environment: dev  # This matches the environment configured in GitHub
 
     defaults:
       run:
@@ -79,48 +78,56 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: 1.4.0  # Specify the required Terraform version
+        terraform_version: "1.4.0"
 
     # Step 5: Verify Terraform installation
     - name: Verify Terraform installation
       run: terraform --version
 
-    # Step 6: Import the resource group into Terraform state (for dev environment)
-    - name: Import resource group (for dev)
-      run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-dev" || true
-      continue-on-error: true  # Skip this step if the resource is already imported
-
-    # Step 7: Terraform Init
+    # Step 6: Terraform Init
     - name: Terraform Init
       run: terraform init
 
-    # Step 8: Terraform Plan
+    # Step 7: Terraform Format Check
+    - name: Terraform Format Check
+      run: terraform fmt -check
+
+    # Step 8: TFLint for Linting
+    - name: Run TFLint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+        tflint --init
+        tflint
+
+    # Step 9: Checkov Security Scan
+    - name: Run Checkov Security Scan
+      run: |
+        pip install checkov
+        checkov -d .
+
+    # Step 10: Terraform Plan
     - name: Terraform Plan
       run: terraform plan -out=tfplan.binary
 
-    # Step 9: Terraform Show
-    # Convert the Terraform binary plan to JSON for Infracost
+    # Step 11: Terraform Show
     - name: Terraform Show
       run: terraform show -json tfplan.binary > plan.json
 
-    # Step 10: Install Infracost
+    # Step 12: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-        infracost --version  # Verify Infracost is installed
+        infracost --version
 
-    # Step 11: Configure Infracost API key
+    # Step 13: Configure Infracost API key
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 12: Run Infracost to calculate costs
+    # Step 14: Run Infracost
     - name: Run Infracost
-      run: |
-        infracost breakdown --path=plan.json \
-        --format=json --out-file=infracost-report.json
+      run: infracost breakdown --path=plan.json --format=json --out-file=infracost-report.json
 
-    # Step 13: Post Infracost comment to PR (if applicable)
+    # Step 15: Post Infracost Comment (For PRs)
     - name: Post Infracost Comment
       if: ${{ github.event_name == 'pull_request' }}
       run: |
@@ -129,112 +136,54 @@ jobs:
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-  # Environment-specific Terraform applies
-  apply_dev:
-    name: Apply for dev environment
-    needs: terraform
-    runs-on: ubuntu-latest
-    environment: dev  # No approval required for dev
-    steps:
-    # Step 1: Checkout the repository
-    - name: Checkout the repository
-      uses: actions/checkout@v4
-
-    # Step 2: Log in to Azure
-    - name: Log in to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_SECRETS }}
-
-    # Step 3: Install Terraform
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: "1.4.0"  # Specify the required Terraform version
-
-    # Step 4: Import resource group for dev (this step ensures it's only done for dev environment)
-    - name: Import resource group (for dev)
-      run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-dev" || true
-      continue-on-error: true  # Skip if the resource is already imported
-
-    # Step 5: Terraform Init
-    - name: Terraform Init for dev
-      run: terraform init
-
-    # Step 6: Terraform Apply
-    - name: Terraform Apply for dev
-      run: terraform apply -var "location=East US" -var "env=dev" -auto-approve -input=false
-
   apply_qa:
     name: Apply for QA environment
     needs: terraform
     runs-on: ubuntu-latest
-    environment: qa  # Approval required in GitHub settings
+    environment: qa
     steps:
-    # Step 1: Checkout the repository
     - name: Checkout the repository
       uses: actions/checkout@v4
 
-    # Step 2: Log in to Azure
     - name: Log in to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_SECRETS }}
 
-    # Step 3: Install Terraform
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: "1.4.0"  # Specify the required Terraform version
+        terraform_version: "1.4.0"
 
-    # Step 4: Import resource group for QA (this step ensures it's only done for QA environment)
-    - name: Import resource group (for QA)
-      run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-qa" || true
-      continue-on-error: true  # Skip if the resource is already imported
-
-    # Step 5: Terraform Init
     - name: Terraform Init for QA
       run: terraform init
 
-    # Step 6: Terraform Apply
     - name: Terraform Apply for QA
-      run: terraform apply -var "location=East US" -var "env=qa" -auto-approve -input=false
+      run: terraform apply -auto-approve -var "resource_group_name=mainresourcegroup1-qa" -var "storage_account_name=mainstoragedevqa"
 
   apply_prod:
     name: Apply for Production environment
     needs: terraform
     runs-on: ubuntu-latest
-    environment: production  # Approval required in GitHub settings
+    environment: production
     steps:
-    # Step 1: Checkout the repository
     - name: Checkout the repository
       uses: actions/checkout@v4
 
-    # Step 2: Log in to Azure
     - name: Log in to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_SECRETS }}
 
-    # Step 3: Install Terraform
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: "1.4.0"  # Specify the required Terraform version
+        terraform_version: "1.4.0"
 
-    # Step 4: Import resource group for Production (this step ensures it's only done for prod environment)
-    - name: Import resource group (for prod)
-      run: |
-        terraform import azurerm_resource_group.rg "/subscriptions/846df436-d658-402a-b0dd-89022775043b/resourceGroups/mainresourcegroup1-prod" || true
-      continue-on-error: true  # Skip if the resource is already imported
-
-    # Step 5: Terraform Init
     - name: Terraform Init for Production
       run: terraform init
 
-    # Step 6: Terraform Apply
     - name: Terraform Apply for Production
-      run: terraform apply -var "location=East US" -var "env=prod" -auto-approve -input=false
+      run: terraform apply -auto-approve -var "resource_group_name=mainresourcegroup1-prod" -var "storage_account_name=mainstoragedevprod"
+
 
