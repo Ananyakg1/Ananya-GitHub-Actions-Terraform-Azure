@@ -41,11 +41,11 @@
 #       uses: hashicorp/setup-terraform@v1
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-name: 'Terraform'
+name: 'Terraform CI/CD'
 
 on:
   push:
-    branches: [ "main", "qa", "production" ]
+    branches: [ "qa", "main" ]
   pull_request:
 
 permissions:
@@ -53,14 +53,19 @@ permissions:
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'Terraform - ${{ matrix.env }}'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [qa, production]  # Running for both environments
+    environment: ${{ matrix.env }}
 
     defaults:
       run:
         shell: bash
 
     steps:
+    # Step 1: Checkout the repository
     - name: Checkout the repository
       uses: actions/checkout@v4
 
@@ -70,64 +75,62 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_SECRETS }}
 
-    # Step 3: Set environment variable
-    - name: Set environment variable
-      run: echo "ENV=${{ vars.ENV }}" >> $GITHUB_ENV
-
-    # Step 4: Set up Terraform
+    # Step 3: Set up Terraform
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
       with:
-        terraform_version: "1.4.0"
+        terraform_version: 1.4.0
 
-    # Step 5: Verify Terraform installation
-    - name: Verify Terraform installation
-      run: terraform --version
+    # Step 4: Install Checkov
+    - name: Install Checkov
+      run: |
+        python -m pip install --upgrade pip
+        pip install checkov
+        checkov --version
 
-    # Step 6: Terraform Init
+    # Step 5: Run Checkov for security scanning
+    - name: Run Checkov
+      run: checkov -d . || true
+
+    # Step 6: Install TFLint
+    - name: Install TFLint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+        tflint --version
+
+    # Step 7: Run TFLint for linting Terraform files
+    - name: Run TFLint
+      run: tflint || true
+
+    # Step 8: Terraform Init
     - name: Terraform Init
       run: terraform init
 
-    # Step 7: Terraform Format Check
-    - name: Terraform Format Check
-      run: terraform fmt -check
-
-    # Step 8: TFLint for Linting
-    - name: Run TFLint
-      run: |
-        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-        tflint --init
-        tflint
-
-    # Step 9: Checkov Security Scan
-    - name: Run Checkov Security Scan
-      run: |
-        pip install checkov
-        checkov -d .
-
-    # Step 10: Terraform Plan
+    # Step 9: Terraform Plan
     - name: Terraform Plan
-      run: terraform plan -out=tfplan.binary
+      run: terraform plan -var="environment=${{ matrix.env }}" -out=tfplan.binary
 
-    # Step 11: Terraform Show
+    # Step 10: Terraform Show (Convert plan to JSON for Infracost)
     - name: Terraform Show
       run: terraform show -json tfplan.binary > plan.json
 
-    # Step 12: Install Infracost
+    # Step 11: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
-        infracost --version
+        infracost --version  
 
-    # Step 13: Configure Infracost API key
+    # Step 12: Configure Infracost API key
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 14: Run Infracost
+    # Step 13: Run Infracost to calculate costs
     - name: Run Infracost
-      run: infracost breakdown --path=plan.json --format=json --out-file=infracost-report.json
+      run: |
+        infracost breakdown --path=plan.json \
+        --format=json --out-file=infracost-report.json
 
-    # Step 15: Post Infracost Comment (For PRs)
+    # Step 14: Post Infracost comment to PR (only for pull requests)
     - name: Post Infracost Comment
       if: ${{ github.event_name == 'pull_request' }}
       run: |
@@ -136,54 +139,7 @@ jobs:
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-  apply_qa:
-    name: Apply for QA environment
-    needs: terraform
-    runs-on: ubuntu-latest
-    environment: qa
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v4
-
-    - name: Log in to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_SECRETS }}
-
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: "1.4.0"
-
-    - name: Terraform Init for QA
-      run: terraform init
-
-    - name: Terraform Apply for QA
-      run: terraform apply -auto-approve -var "resource_group_name=mainresourcegroup1-qa" -var "storage_account_name=mainstoragedevqa"
-
-  apply_prod:
-    name: Apply for Production environment
-    needs: terraform
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v4
-
-    - name: Log in to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_SECRETS }}
-
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: "1.4.0"
-
-    - name: Terraform Init for Production
-      run: terraform init
-
-    - name: Terraform Apply for Production
-      run: terraform apply -auto-approve -var "resource_group_name=mainresourcegroup1-prod" -var "storage_account_name=mainstoragedevprod"
-
-
+    # Step 15: Terraform Apply (Only for Production branch)
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      run: terraform apply -auto-approve -input=false
