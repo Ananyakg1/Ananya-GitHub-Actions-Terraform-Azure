@@ -112,85 +112,68 @@ jobs:
     - name: Run TFLint
       run: tflint || true  # If you want the pipeline to fail on issues, remove "|| true"
 
-    # Step 10: Terraform Init for QA environment
-    - name: Terraform Init (QA)
-      if: ${{ github.event.inputs.environment == 'qa' || github.event.inputs.environment == 'prod' }}
-      run: terraform init -backend-config="environment=qa"
+    # Step 10: Terraform Init for all environments
+    - name: Terraform Init
+      run: terraform init
 
-    # Step 11: Terraform Init for Prod environment
-    - name: Terraform Init (Prod)
-      if: ${{ github.event.inputs.environment == 'prod' }}
-      run: terraform init -backend-config="environment=prod"
+    # Step 11: Terraform Plan for QA environment
+    - name: Terraform Plan for QA
+      run: terraform plan -var="env=qa" -out=tfplan-qa.binary
 
-    # Step 12: Terraform Plan for QA environment
-    - name: Terraform Plan (QA)
-      if: ${{ github.event.inputs.environment == 'qa' }}
-      run: terraform plan -out=tfplan.qa.binary -var="location=East US" -var="env=qa"
+    # Step 12: Terraform Plan for PROD environment
+    - name: Terraform Plan for PROD
+      run: terraform plan -var="env=prod" -out=tfplan-prod.binary
 
-    # Step 13: Terraform Plan for Prod environment
-    - name: Terraform Plan (Prod)
-      if: ${{ github.event.inputs.environment == 'prod' }}
-      run: terraform plan -out=tfplan.prod.binary -var="location=East US" -var="env=prod"
+    # Step 13: Terraform Show for QA environment
+    - name: Terraform Show for QA
+      run: terraform show -json tfplan-qa.binary > plan-qa.json
 
-    # Step 14: Terraform Show (QA)
-    - name: Terraform Show (QA)
-      if: ${{ github.event.inputs.environment == 'qa' }}
-      run: terraform show -json tfplan.qa.binary > plan_qa.json
+    # Step 14: Terraform Show for PROD environment
+    - name: Terraform Show for PROD
+      run: terraform show -json tfplan-prod.binary > plan-prod.json
 
-    # Step 15: Terraform Show (Prod)
-    - name: Terraform Show (Prod)
-      if: ${{ github.event.inputs.environment == 'prod' }}
-      run: terraform show -json tfplan.prod.binary > plan_prod.json
-
-    # Step 16: Install Infracost
+    # Step 15: Install Infracost
     - name: Install Infracost
       run: |
         curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
         infracost --version  # Verify Infracost is installed
 
-    # Step 17: Configure Infracost API key
+    # Step 16: Configure Infracost API key
     # You need to set your Infracost API key in your GitHub repository secrets
     - name: Configure Infracost API key
       run: infracost configure set api_key ${{ secrets.INFRACOST_API_KEY }}
 
-    # Step 18: Run Infracost to calculate costs for QA
-    - name: Run Infracost (QA)
-      if: ${{ github.event.inputs.environment == 'qa' }}
+    # Step 17: Run Infracost for QA
+    - name: Run Infracost for QA
       run: |
-        infracost breakdown --path=plan_qa.json \
+        infracost breakdown --path=plan-qa.json \
         --format=json --out-file=infracost-report-qa.json
 
-    # Step 19: Run Infracost to calculate costs for Prod
-    - name: Run Infracost (Prod)
-      if: ${{ github.event.inputs.environment == 'prod' }}
+    # Step 18: Run Infracost for PROD
+    - name: Run Infracost for PROD
       run: |
-        infracost breakdown --path=plan_prod.json \
+        infracost breakdown --path=plan-prod.json \
         --format=json --out-file=infracost-report-prod.json
 
-    # Step 20: Post Infracost Comment (QA only)
-    - name: Post Infracost Comment (QA)
-      if: ${{ github.event_name == 'pull_request' && github.event.inputs.environment == 'qa' }}
+    # Step 19: Post Infracost Comment for PR (QA and PROD)
+    # This step will only run for pull requests
+    - name: Post Infracost Comment for QA and PROD
+      if: ${{ github.event_name == 'pull_request' }}
       run: |
         infracost comment github --path=infracost-report-qa.json \
         --repo=$GITHUB_REPOSITORY \
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-    # Step 21: Post Infracost Comment (Prod only)
-    - name: Post Infracost Comment (Prod)
-      if: ${{ github.event_name == 'pull_request' && github.event.inputs.environment == 'prod' }}
-      run: |
         infracost comment github --path=infracost-report-prod.json \
         --repo=$GITHUB_REPOSITORY \
         --pull-request=$GITHUB_REF_NAME \
         --github-token=${{ secrets.GITHUB_TOKEN }}
 
-    # Step 22: Terraform Apply for QA
-    - name: Terraform Apply (QA)
-      if: ${{ github.event.inputs.environment == 'qa' }}
-      run: terraform apply -auto-approve -input=false -var="location=East US" -var="env=qa"
+    # Step 20: Terraform Apply for QA
+    - name: Terraform Apply for QA
+      run: terraform apply -var="env=qa" -auto-approve -input=false
 
-    # Step 23: Terraform Apply for Prod
-    - name: Terraform Apply (Prod)
-      if: ${{ github.event.inputs.environment == 'prod' }}
-      run: terraform apply -auto-approve -input=false -var="location=East US" -var="env=prod"
+    # Step 21: Terraform Apply for PROD
+    - name: Terraform Apply for PROD
+      run: terraform apply -var="env=prod" -auto-approve -input=false
